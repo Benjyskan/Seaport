@@ -17,3 +17,5 @@ tests/src/apdu
 
 tests/src/fulfillOrder/dummy.test.js
 tests/src/fulfillOrder/dummy.js
+compile_flags.txt
+tests/.yarn
