@@ -171,9 +171,6 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
 
             // Only on order[0].offer[0]
             if (!(context->transaction_info & IS_OFFER0_PARSED)) {
-                // if start & end are different
-                if (memcmp(context->token1.amount, msg->parameter, PARAMETER_LENGTH))
-                    context->transaction_info |= IS_OFFER_DUTCH;
                 context->transaction_info |= IS_OFFER0_PARSED;
             }
 
