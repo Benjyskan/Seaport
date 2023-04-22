@@ -35,12 +35,8 @@ static void handle_fulfill_basic_order(ethPluginProvideParameter_t *msg, context
             break;
         case FBO__BASIC_ORDER_TYPE:
             PRINTF("FBO__BASIC_ORDER_TYPE\n");
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, 1)) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
             uint16_t order_type_sol;
-            if (!U2BE_from_parameter(msg->parameter, &order_type_sol)) {
+            if (!copy_number(msg->parameter, &order_type_sol)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
@@ -50,13 +46,7 @@ static void handle_fulfill_basic_order(ethPluginProvideParameter_t *msg, context
             break;
         case FBO__LEN_ADDITIONAL_RECIPIENTS:
             PRINTF("FBO__LEN_ADDITIONAL_RECIPIENTS\n");
-            if (does_number_fit(msg->parameter,
-                                PARAMETER_LENGTH,
-                                sizeof(context->current_length))) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-            if (!U2BE_from_parameter(msg->parameter, &context->current_length)) {
+            if (!copy_number(msg->parameter, &context->current_length)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
@@ -100,14 +90,13 @@ static void handle_cancel(ethPluginProvideParameter_t *msg, context_t *context) 
         case CANCEL_ORDERS_LEN:
             PRINTF("CANCEL_ORDERS_LEN\n");
             uint16_t orders;
-            if (!U2BE_from_parameter(msg->parameter, &orders)) {
+            if (!copy_number(msg->parameter, &orders)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            // Check if there is multiple orders
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, 1) || (orders > 1)) {
+            if (orders > 1)
                 context->transaction_info |= ORDERS;
-            } else if (orders == 0) {
+            else if (orders == 0) {
                 PRINTF("ORDER_LEN ERROR\n");
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
@@ -143,11 +132,10 @@ static void handle_fulfill_available_advanced_orders(ethPluginProvideParameter_t
             break;
         case FAADO_ORDERS_LEN:
             PRINTF("FAADO_ORDERS_LEN\n");
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, sizeof(context->orders_len))) {
+            if (!copy_number(msg->parameter, &context->orders_len)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            context->orders_len = msg->parameter[PARAMETER_LENGTH - 1];
             if (context->orders_len == 0) {
                 PRINTF("ORDER_LEN ERROR\n");
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
@@ -202,37 +190,22 @@ static void handle_fulfill_advanced_order(ethPluginProvideParameter_t *msg, cont
             break;
         case FADO_NUMERATOR:
             PRINTF("FADO_NUMERATOR\n");
-
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, sizeof(context->numerator))) {
-                PRINTF("\n\n\nERROR, NUMBER DOES NOT FIT\n\n\n");
+            if (!copy_number(msg->parameter, &context->numerator)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
-            } else {
-                if (!U4BE_from_parameter(msg->parameter, &context->numerator)) {
-                    msg->result = ETH_PLUGIN_RESULT_ERROR;
-                    return;
-                }
             }
-
             context->next_param = FADO_DENOMINATOR;
             break;
         case FADO_DENOMINATOR:
             PRINTF("FADO_DENOMINATOR\n");
 
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, sizeof(context->denominator))) {
-                PRINTF("\n\n\nERROR, NUMBER DOES NOT FIT\n\n\n");
+            if (!copy_number(msg->parameter, &context->denominator)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
-            } else {
-                if (!U4BE_from_parameter(msg->parameter, &context->denominator)) {
-                    msg->result = ETH_PLUGIN_RESULT_ERROR;
-                    return;
-                }
-                if (context->numerator && context->denominator &&
-                    context->numerator != context->denominator)
-                    context->transaction_info |= CANT_CALC_AMOUNT;
             }
-
+            if (context->numerator && context->denominator &&
+                context->numerator != context->denominator)
+                context->transaction_info |= CANT_CALC_AMOUNT;
             context->next_param = FADO_SIGNATURE_OFFSET;
             break;
         case FADO_SIGNATURE_OFFSET:
@@ -291,11 +264,10 @@ static void handle_fulfill_available_orders(ethPluginProvideParameter_t *msg, co
             break;
         case FAO_ORDERS_LEN:
             PRINTF("FAO_ORDERS_LEN\n");
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, sizeof(context->orders_len))) {
+            if (!copy_number(msg->parameter, &context->orders_len)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            context->orders_len = msg->parameter[PARAMETER_LENGTH - 1];
             if (context->orders_len == 0) {
                 PRINTF("ORDERS_LEN ERROR\n");
                 msg->result = ETH_PLUGIN_RESULT_ERROR;

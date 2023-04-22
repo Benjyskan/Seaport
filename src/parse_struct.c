@@ -320,13 +320,7 @@ void parse_param(ethPluginProvideParameter_t *msg, context_t *context) {
             break;
         case PARAM_CONSIDERATIONS_LEN:
             PRINTF("PARAM_CONSIDERATIONS_LEN\n");
-            if (does_number_fit(msg->parameter,
-                                PARAMETER_LENGTH,
-                                sizeof(context->current_length))) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-            if (!U2BE_from_parameter(msg->parameter, &context->current_length)) {
+            if (!copy_number(msg->parameter, &context->current_length)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
@@ -358,12 +352,12 @@ void parse_orders(ethPluginProvideParameter_t *msg, context_t *context) {
         case ORDER_PARAMETER_OFFSET:
             PRINTF("ORDER_PARAMETER_OFFSET\n");
 
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, 1) ||
+            // Check if offset is 64 (standard)
+            if (!allzeroes(msg->parameter, PARAMETER_LENGTH - 1) ||
                 msg->parameter[PARAMETER_LENGTH - 1] != 64) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-
             context->orders_index = ORDER_SIGNATURE_OFFSET;
             break;
         case ORDER_SIGNATURE_OFFSET:
@@ -381,13 +375,7 @@ void parse_orders(ethPluginProvideParameter_t *msg, context_t *context) {
             break;
         case ORDER_SIGNATURE:
             PRINTF("ORDER_SIGNATURE\n");  // If len = 0 what happens ?
-            if (does_number_fit(msg->parameter,
-                                PARAMETER_LENGTH,
-                                sizeof(context->current_length))) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-            if (!U2BE_from_parameter(msg->parameter, &context->current_length)) {
+            if (!copy_number(msg->parameter, &context->current_length)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
@@ -411,25 +399,19 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
         case ADVANCED_PARAMETER_OFFSET:
             PRINTF("ADVANCED_PARAMETER_OFFSET\n");
 
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, 1) ||
+            if (!allzeroes(msg->parameter, PARAMETER_LENGTH - 1) ||
                 msg->parameter[PARAMETER_LENGTH - 1] != 160) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-
             context->orders_index = ADVANCED_NUMERATOR;
             break;
         case ADVANCED_NUMERATOR:
             PRINTF("ADVANCED_NUMERATOR\n");
 
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, sizeof(context->numerator))) {
+            if (!copy_number(msg->parameter, &context->numerator)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
-            } else {
-                if (!U4BE_from_parameter(msg->parameter, &context->numerator)) {
-                    msg->result = ETH_PLUGIN_RESULT_ERROR;
-                    return;
-                }
             }
 
             context->orders_index = ADVANCED_DENOMINATOR;
@@ -437,18 +419,13 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
         case ADVANCED_DENOMINATOR:
             PRINTF("ADVANCED_DENOMINATOR\n");
 
-            if (does_number_fit(msg->parameter, PARAMETER_LENGTH, sizeof(context->denominator))) {
+            if (!copy_number(msg->parameter, &context->denominator)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
-            } else {
-                if (!U4BE_from_parameter(msg->parameter, &context->denominator)) {
-                    msg->result = ETH_PLUGIN_RESULT_ERROR;
-                    return;
-                }
-                if (context->numerator && context->denominator &&
-                    context->numerator != context->denominator)
-                    context->transaction_info |= CANT_CALC_AMOUNT;
             }
+            if (context->numerator && context->denominator &&
+                context->numerator != context->denominator)
+                context->transaction_info |= CANT_CALC_AMOUNT;
 
             context->orders_index = ADVANCED_SIGNATURE_OFFSET;
             break;
@@ -471,17 +448,10 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
             break;
         case ADVANCED_SIGNATURE_LEN:
             PRINTF("ADVANCED_SIGNATURE_LEN\n");
-            if (does_number_fit(msg->parameter,
-                                PARAMETER_LENGTH,
-                                sizeof(context->current_length))) {
+            if (!copy_number(msg->parameter, &context->current_length)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            if (!U2BE_from_parameter(msg->parameter, &context->current_length)) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-
             context->skip = context->current_length / PARAMETER_LENGTH;
             if (context->current_length % PARAMETER_LENGTH) context->skip++;
 
@@ -489,17 +459,10 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
             break;
         case ADVANCED_EXTRADATA_LEN:
             PRINTF("ADVANCED_EXTRADATA_LEN\n");
-            if (does_number_fit(msg->parameter,
-                                PARAMETER_LENGTH,
-                                sizeof(context->current_length))) {
+            if (!copy_number(msg->parameter, &context->current_length)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            if (!U2BE_from_parameter(msg->parameter, &context->current_length)) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-
             context->skip = context->current_length / PARAMETER_LENGTH;
             if (context->current_length % PARAMETER_LENGTH) context->skip++;
 

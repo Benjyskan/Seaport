@@ -45,15 +45,18 @@ uint8_t sub_uint256(uint8_t *a, uint8_t *b) {
 }
 
 /*
-**  numerator/denominator utils
+**  copy_number()
 */
 
-/* check if number in parameter fit in uint size */
-uint8_t does_number_fit(const uint8_t *parameter, uint8_t parameter_length, uint8_t size) {
-    for (uint8_t i = 0; i < parameter_length - size - 1; i++) {
-        if (parameter[i] != 0) return 1;
-    }
-    return 0;
+bool copy_number_uint8(const uint8_t *parameter, uint8_t *target) {
+    if (!allzeroes(parameter, PARAMETER_LENGTH - sizeof(*target))) return false;
+    (*target) = parameter[PARAMETER_LENGTH - sizeof(*target)];
+    return true;
+}
+
+bool copy_type_error(__attribute__((unused)) const uint8_t *parameter,
+                     __attribute__((unused)) void *target) {
+    return false;
 }
 
 /* Calculate the number of nfts if numerator is different than denominator
@@ -72,9 +75,7 @@ uint8_t calc_number_of_nfts(uint8_t *amount,
     PRINTF("NB_NFT --------\n");
 
     uint16_t value = 0;
-    if (does_number_fit(amount, PARAMETER_LENGTH, sizeof(value))) return 1;
-
-    value = U2BE(amount, INT256_LENGTH - sizeof(value));
+    if (!copy_number(amount, &value)) return 1;
 
     PRINTF("NB_NFT value: %d\n", value);
     if (numerator == denominator) {

@@ -89,17 +89,28 @@ static void display_item(ethQueryContractUI_t *msg,
         case NFT:
         case MULTIPLE_NFTS:
             PRINTF("case NFT, is_found: %d\n", is_found);
-            if (does_number_fit(token.amount, INT256_LENGTH, 4)) {
+            uint16_t amount;
+            if (!copy_number(token.amount, &amount)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
+
+            char *collection_name;
+            if (is_found)
+                collection_name = (is_opensea_collection) ? OPENSEA_SHARED_STOREFRONT
+                                                          : msg->item2->nft.collectionName;
+            else {
+                if (number_of_nfts)
+                    collection_name = (number_of_nfts > 1) ? "NFTS" : UNKNOWN_NFT;
+                else
+                    collection_name = (amount > 1) ? "NFTS" : UNKNOWN_NFT;
+            }
+
             snprintf(msg->msg,
                      msg->msgLength,
                      "%d %s",
-                     (number_of_nfts) ? number_of_nfts : U4BE(token.amount, INT256_LENGTH - 4),
-                     (is_found) ? ((is_opensea_collection) ? OPENSEA_SHARED_STOREFRONT
-                                                           : msg->item2->nft.collectionName)
-                                : UNKNOWN_NFT);
+                     (number_of_nfts) ? number_of_nfts : amount,
+                     collection_name);
             break;
         case MULTIPLE_ERC20:
             break;

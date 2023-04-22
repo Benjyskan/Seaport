@@ -242,6 +242,16 @@ typedef enum item_type_e {
 #define RIGHT_SCROLL 1
 #define LEFT_SCROLL  0
 
+#define copy_number(parameter, T)              \
+    _Generic((T), uint32_t *                   \
+             : U4BE_from_parameter, uint16_t * \
+             : U2BE_from_parameter, uint8_t *  \
+             : copy_number_uint8, default      \
+             : copy_type_error)(parameter, T)
+
+bool copy_number_uint8(const uint8_t *parameter, uint8_t *target);
+bool copy_type_error(const uint8_t *parameter, void *target);
+
 // sizeof(token_t): 53
 // aligned on 32
 typedef struct token_t {
@@ -298,7 +308,6 @@ void handle_provide_token(void *parameters);
 void handle_query_contract_id(void *parameters);
 uint8_t add_uint256(uint8_t *a, uint8_t *b);
 uint8_t sub_uint256(uint8_t *a, uint8_t *b);
-uint8_t does_number_fit(const uint8_t *parameter, uint8_t parameter_length, uint8_t size);
 uint8_t calc_number_of_nfts(uint8_t *amount,
                             uint32_t numerator,
                             uint32_t denominator,
