@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # check system
-if [ "$(uname)" == "Darwin" ]
+if [ "$(uname)" != "Linux" ]
 then
 	echo "Please build on Docker"
 	exit 1
@@ -10,13 +10,13 @@ fi
 ### Variables
 
 # FILL THESE WITH YOUR OWN SDKs PATHS and APP-ETHEREUM's ROOT
-echo "using $APP_ETHEREUM"
 NANOS_SDK=$NANOS_SDK
 NANOX_SDK=$NANOX_SDK
 NANOSP_SDK=$NANOSP_SDK
 # APP_ETHEREUM=$APP_ETHEREUM
 APP_ETHEREUM="/plugin_dev/app-ethereum"
-PLUGIN_NAME='opensea'
+echo "using $APP_ETHEREUM"
+PLUGIN_NAME='plugin'
 
 ###	Functions
 
