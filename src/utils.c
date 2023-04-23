@@ -1,4 +1,3 @@
-#include "eth_internals.h"
 #include "opensea_plugin.h"
 #include <stdint.h>
 

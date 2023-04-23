@@ -76,7 +76,10 @@ static void display_item(ethQueryContractUI_t *msg,
         case ERC20:
             PRINTF("current token found: %d\n", is_found);
             if (no_amount) {
-                snprintf(msg->msg, msg->msgLength, "? %s", msg->item1->token.ticker);
+                snprintf(msg->msg,
+                         msg->msgLength,
+                         "? %s",
+                         (is_found) ? msg->item1->token.ticker : UNKNOWN_ERC20);
             } else {
                 amountToString(token.amount,
                                INT256_LENGTH,

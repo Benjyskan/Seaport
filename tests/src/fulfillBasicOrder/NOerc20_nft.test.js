@@ -15,7 +15,7 @@ const inputData =
 const models = [
   {
     name: "nanos",
-    steps: 11,
+    steps: 12,
   },
   // {
   // 	name: 'nanox',
