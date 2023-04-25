@@ -1,4 +1,5 @@
 
+#include "eth_plugin_interface.h"
 #include "opensea_plugin.h"
 /*
 **  Debug
@@ -11,7 +12,6 @@ static void print_item(context_t *context, token_t token) {
     if (token.type == NATIVE) PRINTF("NATIVE\n");
     if (token.type == ERC20) PRINTF("ERC20\n");
     if (token.type == NFT) PRINTF("NFT\n");
-    if (token.type == MULTIPLE_ERC20) PRINTF("MULTIPLE_ERC20\n");
     if (token.type == MULTIPLE_NFTS) PRINTF("MULTIPLE_NFTS\n");
     PRINTF("token.amount: %.*H\n", INT256_LENGTH, token.amount);
     PRINTF("token.address: %.*H\n", ADDRESS_LENGTH, token.address);
@@ -117,9 +117,16 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
         case OFFER_TOKEN:
             PRINTF("OFFER_TOKEN\n");
 
-            if (context->token1.type == NATIVE) {
-                if (context->current_item_type == ERC20) context->token1.type = MULTIPLE_ERC20;
-            } else {  // token1.type != NATIVE
+            // Catch if there is different types in offers.
+            if (context->token1.type != context->current_item_type) {
+                // but ignore if current type is NFT and token type is MULTIPLE_NFTS.
+                if (!(context->token1.type == MULTIPLE_NFTS && context->current_item_type == NFT)) {
+                    PRINTF("ERROR: Multiple Offer token type\n");
+                    msg->result = ETH_PLUGIN_RESULT_ERROR;
+                    return;
+                }
+            }
+            if (context->token1.type != NATIVE) {
                 // to set token1.address only on offer[0]
                 if (ADDRESS_IS_NULL_ADDRESS(context->token1.address))
                     copy_address(context->token1.address, msg->parameter, ADDRESS_LENGTH);
@@ -129,9 +136,16 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
                         memcmp(context->token1.address,
                                msg->parameter + PARAMETER_LENGTH - ADDRESS_LENGTH,
                                ADDRESS_LENGTH))
-                        // change to multiple if a new address from the same type is found
-                        context->token1.type =
-                            (context->token1.type == ERC20) ? MULTIPLE_ERC20 : MULTIPLE_NFTS;
+                    // change to multiple if a new address from the same type is found
+                    {
+                        if (context->token1.type == NFT)
+                            context->token1.type = MULTIPLE_NFTS;
+                        else if (context->token1.type == ERC20) {
+                            PRINTF("ERROR: Multiple Money in consideration's token type\n");
+                            msg->result = ETH_PLUGIN_RESULT_ERROR;
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -213,10 +227,14 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
             break;
         case CONSIDERATION_TOKEN:
             PRINTF("CONSIDERATION_TOKEN\n");
-            if (context->token2.type == NATIVE) {
-                if (context->current_item_type == ERC20) context->token2.type = MULTIPLE_ERC20;
-            } else {  // t2.type != NATIVE
-                      // to set t2.address only on consi[0]
+            if ((context->token2.type == NATIVE || context->token2.type == ERC20) &&
+                context->token2.type != context->current_item_type) {
+                PRINTF("ERROR: Multiple Money in consideration's token type\n");
+                msg->result = ETH_PLUGIN_RESULT_ERROR;
+                return;
+            }
+            if (context->token2.type != NATIVE) {  // t2.type != NATIVE
+                                                   // to set t2.address only on consi[0]
                 if (ADDRESS_IS_NULL_ADDRESS(context->token2.address))
                     copy_address(context->token2.address, msg->parameter, ADDRESS_LENGTH);
                 else {  // on consi[>0]
@@ -224,10 +242,16 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
                     if (context->current_item_type == context->token2.type &&
                         memcmp(context->token2.address,
                                msg->parameter + PARAMETER_LENGTH - ADDRESS_LENGTH,
-                               ADDRESS_LENGTH))
+                               ADDRESS_LENGTH)) {
+                        // Throw on Multiple erc20.
+                        if (context->token2.type == ERC20) {
+                            PRINTF("ERROR: Multiple Money in consideration's token type\n");
+                            msg->result = ETH_PLUGIN_RESULT_ERROR;
+                            return;
+                        }
                         // change to multiple if a new address from the same type is found
-                        context->token2.type =
-                            (context->token2.type == ERC20) ? MULTIPLE_ERC20 : MULTIPLE_NFTS;
+                        context->token2.type = MULTIPLE_NFTS;
+                    }
                 }
             }
             context->items_index = CONSIDERATION_IDENTIFIER;

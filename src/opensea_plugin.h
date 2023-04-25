@@ -165,16 +165,6 @@ typedef enum {
 } parameters;
 
 typedef enum {
-    ITEM_TYPE_NONE,
-    ITEM_TYPE_NATIVE,
-    ITEM_TYPE_ERC20,
-    ITEM_TYPE_NFT,
-    ITEM_TYPE_MULTIPLE_NFTS,
-    ITEM_TYPE_MULTIPLE_ERC20S,
-    ITEM_TYPE_MIXED_TYPES,
-} item_type;
-
-typedef enum {
     OFFER_ITEM_TYPE,
     OFFER_TOKEN,
     OFFER_IDENTIFIER,
@@ -206,7 +196,6 @@ typedef enum item_type_e {
     NATIVE,
     ERC20,
     NFT,
-    MULTIPLE_ERC20,
     MULTIPLE_NFTS,
 } item_type_e;
 
@@ -274,8 +263,8 @@ typedef struct context_t {
 
     token_t token2;  // 53
     uint8_t items_index;
-    uint8_t current_item_type;
-    uint8_t order_type;  // the nature of the tx (ETH_NFT, NFT_ERC20...)
+    uint8_t current_item_type;  // Will never be 'MULTIPLE_NFTS'
+    uint8_t order_type;         // the nature of the tx (ETH_NFT, NFT_ERC20...)
     uint8_t tx_type;
     uint16_t current_length;    // is the length of the current array
     uint16_t transaction_info;  // bitwise booleans

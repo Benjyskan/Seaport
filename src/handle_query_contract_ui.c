@@ -115,8 +115,6 @@ static void display_item(ethQueryContractUI_t *msg,
                      (number_of_nfts) ? number_of_nfts : amount,
                      collection_name);
             break;
-        case MULTIPLE_ERC20:
-            break;
         default:
             PRINTF("\n\n\nERROR UI display_item ERROR!!!!\n\n\n");
     }
