@@ -56,6 +56,7 @@ void handle_finalize(void *parameters) {
                 context->transaction_info |= IS_BUY4;
                 context->screen_array |= BUY_FOR_UI;
             }
+            __attribute__((fallthrough));
         case FULFILL_ORDER:
         case FULFILL_BASIC_ORDER:
         case FULFILL_AVAILABLE_ORDERS:
@@ -65,6 +66,7 @@ void handle_finalize(void *parameters) {
         case INCREMENT_COUNTER:
         case WYVERN_V2_INCREMENT_NONCE:
             context->transaction_info |= ORDERS;
+            __attribute__((fallthrough));
         case CANCEL:
         case WYVERN_V2_CANCEL_ORDER__:
             context->screen_array |= CANCEL_UI;
@@ -89,6 +91,7 @@ void handle_finalize(void *parameters) {
         case FULFILL_ORDER:
             PRINTF("Swapping tokens.\n");
             swap_tokens(context);
+            break;
         default:
             break;
     }

@@ -4,7 +4,7 @@ const contractName = "Seaport";
 const contractAddr = "0x00000000006c3852cbef3e08e8df289169ede581";
 const testNetwork = "ethereum";
 
-const testLabel = "fulfillAdvancedOrder buy4 eth 10nft"; // <= Name of the test
+const testLabel = "fulfillAdvancedOrder buy4 eth 10nfts"; // <= Name of the test
 const testDirSuffix = testLabel.toLowerCase().replace(/\s+/g, '_');
 
 // https://etherscan.io/tx/0x82ee1306452396ef0e45a62bfcfdd01f113367531aa82e50024cabfd2afa5406

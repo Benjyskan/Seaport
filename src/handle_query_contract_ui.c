@@ -98,15 +98,15 @@ static void display_item(ethQueryContractUI_t *msg,
                 return;
             }
 
-            char *collection_name;
+            const char *collection_name;
             if (is_found)
                 collection_name = (is_opensea_collection) ? OPENSEA_SHARED_STOREFRONT
                                                           : msg->item2->nft.collectionName;
             else {
                 if (number_of_nfts)
-                    collection_name = (number_of_nfts > 1) ? "NFTS" : UNKNOWN_NFT;
+                    collection_name = (number_of_nfts > 1) ? "NFTs" : UNKNOWN_NFT;
                 else
-                    collection_name = (amount > 1) ? "NFTS" : UNKNOWN_NFT;
+                    collection_name = (amount > 1) ? "NFTs" : UNKNOWN_NFT;
             }
 
             snprintf(msg->msg,
