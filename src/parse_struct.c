@@ -64,7 +64,11 @@ uint8_t get_basic_order_type(ethPluginProvideParameter_t *msg, uint8_t basic_ord
     return type;
 }
 
-static uint8_t get_item_type_from_sol(uint8_t parameter_last_byte) {
+static uint8_t get_item_type_from_sol(const uint8_t *parameter) {
+	   uint8_t parameter_last_byte = SOL_ERROR;
+
+	   if (!copy_number(parameter, &parameter_last_byte))
+			return SOL_ERROR;
     switch ((sol_ItemType_e) parameter_last_byte) {
         case SOL_NATIVE:
             return NATIVE;
@@ -93,7 +97,7 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
 
             // only set token1.type on first Offer.
             if (context->token1.type == UNSET) {
-                context->token1.type = get_item_type_from_sol(msg->parameter[PARAMETER_LENGTH - 1]);
+                context->token1.type = get_item_type_from_sol(msg->parameter);
                 if (context->token1.type == SOL_ERROR) {
                     msg->result = ETH_PLUGIN_RESULT_ERROR;
                     return;
@@ -103,7 +107,7 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
             }
             // always set current_item_type
             context->current_item_type =
-                get_item_type_from_sol(msg->parameter[PARAMETER_LENGTH - 1]);
+                get_item_type_from_sol(msg->parameter);
             if (context->current_item_type == SOL_ERROR) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
@@ -129,7 +133,14 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
             if (context->token1.type != NATIVE) {
                 // to set token1.address only on offer[0]
                 if (ADDRESS_IS_NULL_ADDRESS(context->token1.address))
+                {
+                    if (allzeroes(msg->parameter, PARAMETER_LENGTH))
+                    {
+                        msg->result = ETH_PLUGIN_RESULT_ERROR;
+                        return;
+                    }
                     copy_address(context->token1.address, msg->parameter, ADDRESS_LENGTH);
+                }
                 else {  // on offer[>0]
                     // is same type and different address as offer[0]
                     if (context->current_item_type == context->token1.type &&
@@ -141,7 +152,7 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
                         if (context->token1.type == NFT)
                             context->token1.type = MULTIPLE_NFTS;
                         else if (context->token1.type == ERC20) {
-                            PRINTF("ERROR: Multiple Money in consideration's token type\n");
+                            PRINTF("ERROR: Multiple currencies in consideration's token type\n");
                             msg->result = ETH_PLUGIN_RESULT_ERROR;
                             return;
                         }
@@ -182,12 +193,6 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
             break;
         case OFFER_END_AMOUNT:
             PRINTF("OFFER_END_AMOUNT\n");
-
-            // Only on order[0].offer[0]
-            if (!(context->transaction_info & IS_OFFER0_PARSED)) {
-                context->transaction_info |= IS_OFFER0_PARSED;
-            }
-
             context->current_length--;
             context->items_index = OFFER_ITEM_TYPE;
             break;
@@ -207,14 +212,14 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
 
             // set t2.type only on consi[0]
             if (context->token2.type == UNSET)
-                context->token2.type = get_item_type_from_sol(msg->parameter[PARAMETER_LENGTH - 1]);
+                context->token2.type = get_item_type_from_sol(msg->parameter);
             if (context->token2.type == SOL_ERROR) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
             // always set current_item_type
             context->current_item_type =
-                get_item_type_from_sol(msg->parameter[PARAMETER_LENGTH - 1]);
+                get_item_type_from_sol(msg->parameter);
             if (context->current_item_type == SOL_ERROR) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
@@ -236,7 +241,14 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
             if (context->token2.type != NATIVE) {  // t2.type != NATIVE
                                                    // to set t2.address only on consi[0]
                 if (ADDRESS_IS_NULL_ADDRESS(context->token2.address))
+                {
+                    if (allzeroes(msg->parameter, PARAMETER_LENGTH))
+                    {
+                        msg->result = ETH_PLUGIN_RESULT_ERROR;
+                        return;
+                    }
                     copy_address(context->token2.address, msg->parameter, ADDRESS_LENGTH);
+                }
                 else {  // on consi[>0]
                     // is same type and different address as consi[0]
                     if (context->current_item_type == context->token2.type &&
@@ -314,18 +326,13 @@ void parse_param(ethPluginProvideParameter_t *msg, context_t *context) {
     switch ((parameters) context->param_index) {
         case PARAM_OFFERER:
             PRINTF("PARAM_OFFERER\n");
-            // copy_address(context->offerer_address, msg->parameter, ADDRESS_LENGTH);
-            context->skip = 9;
-            context->param_index = PARAM_TOTAL_ORIGINAL_CONSIDERATION_ITEMS;
-            break;
-        case PARAM_TOTAL_ORIGINAL_CONSIDERATION_ITEMS:
-            PRINTF("PARAM_TOTAL_ORIGINAL_CONSIDERATION_ITEMS\n");
+            context->skip = 10;
             context->param_index = PARAM_OFFERS_LEN;
             context->items_index = 0;
             break;
         case PARAM_OFFERS_LEN:
             PRINTF("PARAM_OFFERS_LEN\n");
-            if (!U2BE_from_parameter(msg->parameter, &context->current_length) ||
+            if (!copy_number(msg->parameter, &context->current_length) ||
                 context->current_length == 0) {
                 PRINTF("OFFER_LEN ERROR\n");
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
@@ -403,7 +410,11 @@ void parse_orders(ethPluginProvideParameter_t *msg, context_t *context) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-
+            if (context->current_length == 0)
+            {
+                msg->result = ETH_PLUGIN_RESULT_ERROR;
+                return;
+            }
             // Skip signature, sometime length % 32 != 0
             context->skip = context->current_length / PARAMETER_LENGTH;
             if (context->current_length % PARAMETER_LENGTH) context->skip++;
@@ -444,6 +455,11 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
             PRINTF("ADVANCED_DENOMINATOR\n");
 
             if (!copy_number(msg->parameter, &context->denominator)) {
+                msg->result = ETH_PLUGIN_RESULT_ERROR;
+                return;
+            }
+            if (context->numerator == 0 || context->denominator == 0)
+            {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }

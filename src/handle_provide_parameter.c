@@ -55,14 +55,13 @@ static void handle_fulfill_basic_order(ethPluginProvideParameter_t *msg, context
         case FBO__ADDITIONAL_AMOUNT:
             PRINTF("FBO__ADDITIONAL_AMOUNT\n");
             uint8_t buf_amount[INT256_LENGTH] = {0};
+            copy_parameter(buf_amount, msg->parameter, PARAMETER_LENGTH);
             if (context->order_type == ERC20_NFT || context->order_type == ETH_NFT) {
-                copy_parameter(buf_amount, msg->parameter, PARAMETER_LENGTH);
                 if (add_uint256(context->token1.amount, buf_amount)) {
                     PRINTF("ERROR: uint256 overflow error.\n");
                     msg->result = ETH_PLUGIN_RESULT_ERROR;
                 }
             } else {  // is NFT_ERC20
-                copy_parameter(buf_amount, msg->parameter, PARAMETER_LENGTH);
                 if (sub_uint256(context->token2.amount, buf_amount)) {
                     PRINTF("ERROR: uint256 overflow error.\n");
                     msg->result = ETH_PLUGIN_RESULT_ERROR;
@@ -123,7 +122,7 @@ static void handle_fulfill_available_advanced_orders(ethPluginProvideParameter_t
             break;
         case FAADO_RECIPIENT:
             PRINTF("FAADO_RECIPIENT\n");
-            copy_parameter(context->recipient_address, msg->parameter + 12, ADDRESS_LENGTH);
+            copy_address(context->recipient_address, msg->parameter, ADDRESS_LENGTH);
             context->next_param = FAADO_MAXIMUM_FULFILLED;
             break;
         case FAADO_MAXIMUM_FULFILLED:
@@ -184,7 +183,7 @@ static void handle_fulfill_advanced_order(ethPluginProvideParameter_t *msg, cont
             break;
         case FADO_RECIPIENT:
             PRINTF("FADO_RECIPIENT\n");
-            copy_parameter(context->recipient_address, msg->parameter + 12, ADDRESS_LENGTH);
+            copy_address(context->recipient_address, msg->parameter, ADDRESS_LENGTH);
             context->skip = 1;
             context->next_param = FADO_NUMERATOR;
             break;
@@ -200,6 +199,11 @@ static void handle_fulfill_advanced_order(ethPluginProvideParameter_t *msg, cont
             PRINTF("FADO_DENOMINATOR\n");
 
             if (!copy_number(msg->parameter, &context->denominator)) {
+                msg->result = ETH_PLUGIN_RESULT_ERROR;
+                return;
+            }
+            if (context->numerator == 0 || context->denominator == 0)
+            {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
