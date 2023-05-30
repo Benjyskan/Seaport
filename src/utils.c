@@ -111,3 +111,19 @@ void swap_tokens(context_t *context) {
     context->token1 = context->token2;
     context->token2 = save;
 }
+
+/*
+** copy_and_check_nume_deno
+** return 1 on error.
+*/
+
+uint8_t check_nume_deno(ethPluginProvideParameter_t *msg, context_t *context) {
+    if (!copy_number(msg->parameter, &context->denominator) ||
+        (context->numerator == 0 || context->denominator == 0)) {
+        msg->result = ETH_PLUGIN_RESULT_ERROR;
+        return 1;
+    }
+    if (context->numerator && context->denominator && context->numerator != context->denominator)
+        context->transaction_info |= CANT_CALC_AMOUNT;
+    return 0;
+}

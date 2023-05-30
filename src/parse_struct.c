@@ -430,17 +430,7 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
         case ADVANCED_DENOMINATOR:
             PRINTF("ADVANCED_DENOMINATOR\n");
 
-            if (!copy_number(msg->parameter, &context->denominator)) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-            if (context->numerator == 0 || context->denominator == 0) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-            if (context->numerator && context->denominator &&
-                context->numerator != context->denominator)
-                context->transaction_info |= CANT_CALC_AMOUNT;
+            if (check_nume_deno(msg, context)) return;
 
             context->orders_index = ADVANCED_SIGNATURE_OFFSET;
             break;

@@ -302,6 +302,7 @@ uint8_t calc_number_of_nfts(uint8_t *amount,
                             uint32_t denominator,
                             uint16_t *number_of_nfts);
 void swap_tokens(context_t *context);
+uint8_t check_nume_deno(ethPluginProvideParameter_t *msg, context_t *context);
 uint8_t get_screen_index(uint8_t screenIndex,
                          uint8_t *prevIndex,
                          uint8_t probe,

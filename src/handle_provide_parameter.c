@@ -200,17 +200,7 @@ static void handle_fulfill_advanced_order(ethPluginProvideParameter_t *msg, cont
         case FADO_DENOMINATOR:
             PRINTF("FADO_DENOMINATOR\n");
 
-            if (!copy_number(msg->parameter, &context->denominator)) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-            if (context->numerator == 0 || context->denominator == 0) {
-                msg->result = ETH_PLUGIN_RESULT_ERROR;
-                return;
-            }
-            if (context->numerator && context->denominator &&
-                context->numerator != context->denominator)
-                context->transaction_info |= CANT_CALC_AMOUNT;
+            if (check_nume_deno(msg, context)) return;
 
             context->next_param = FADO_SIGNATURE_OFFSET;
             break;
