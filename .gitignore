@@ -20,3 +20,6 @@ tests/src/fulfillOrder/dummy.js
 compile_flags.txt
 tests/.yarn
 build/nanos
+
+build/
+tests/test-report.html
