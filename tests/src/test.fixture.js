@@ -5,7 +5,7 @@ import { parseEther, parseUnits, RLP } from "ethers/lib/utils";
 import { ethers } from "ethers";
 import ledgerService from "@ledgerhq/hw-app-eth/lib/services/ledger"
 
-const transactionUploadDelay = 60000;
+const transactionUploadDelay = 120000;
 
 const sim_options_nano = {
   ...DEFAULT_START_OPTIONS,
