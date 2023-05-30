@@ -189,10 +189,12 @@ static void handle_fulfill_advanced_order(ethPluginProvideParameter_t *msg, cont
             break;
         case FADO_NUMERATOR:
             PRINTF("FADO_NUMERATOR\n");
+
             if (!copy_number(msg->parameter, &context->numerator)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
+
             context->next_param = FADO_DENOMINATOR;
             break;
         case FADO_DENOMINATOR:
@@ -202,14 +204,14 @@ static void handle_fulfill_advanced_order(ethPluginProvideParameter_t *msg, cont
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            if (context->numerator == 0 || context->denominator == 0)
-            {
+            if (context->numerator == 0 || context->denominator == 0) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
             if (context->numerator && context->denominator &&
                 context->numerator != context->denominator)
                 context->transaction_info |= CANT_CALC_AMOUNT;
+
             context->next_param = FADO_SIGNATURE_OFFSET;
             break;
         case FADO_SIGNATURE_OFFSET:

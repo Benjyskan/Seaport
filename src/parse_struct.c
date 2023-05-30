@@ -65,10 +65,9 @@ uint8_t get_basic_order_type(ethPluginProvideParameter_t *msg, uint8_t basic_ord
 }
 
 static uint8_t get_item_type_from_sol(const uint8_t *parameter) {
-	   uint8_t parameter_last_byte = SOL_ERROR;
+    uint8_t parameter_last_byte = SOL_ERROR;
 
-	   if (!copy_number(parameter, &parameter_last_byte))
-			return SOL_ERROR;
+    if (!copy_number(parameter, &parameter_last_byte)) return SOL_ERROR;
     switch ((sol_ItemType_e) parameter_last_byte) {
         case SOL_NATIVE:
             return NATIVE;
@@ -106,8 +105,7 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
                     context->transaction_info |= IS_ACCEPT;
             }
             // always set current_item_type
-            context->current_item_type =
-                get_item_type_from_sol(msg->parameter);
+            context->current_item_type = get_item_type_from_sol(msg->parameter);
             if (context->current_item_type == SOL_ERROR) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
@@ -132,16 +130,13 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
             }
             if (context->token1.type != NATIVE) {
                 // to set token1.address only on offer[0]
-                if (ADDRESS_IS_NULL_ADDRESS(context->token1.address))
-                {
-                    if (allzeroes(msg->parameter, PARAMETER_LENGTH))
-                    {
+                if (ADDRESS_IS_NULL_ADDRESS(context->token1.address)) {
+                    if (allzeroes(msg->parameter, PARAMETER_LENGTH)) {
                         msg->result = ETH_PLUGIN_RESULT_ERROR;
                         return;
                     }
                     copy_address(context->token1.address, msg->parameter, ADDRESS_LENGTH);
-                }
-                else {  // on offer[>0]
+                } else {  // on offer[>0]
                     // is same type and different address as offer[0]
                     if (context->current_item_type == context->token1.type &&
                         memcmp(context->token1.address,
@@ -175,18 +170,9 @@ void parse_offer(ethPluginProvideParameter_t *msg, context_t *context) {
             PRINTF("BUF AMOUNT:\t%.*H\n", INT256_LENGTH, buf_amount);
 
             // add if t1.type is equal to current_item_type && t1.type is not multiple
-            if (context->token1.type == context->current_item_type) {
-                if (add_uint256(context->token1.amount, buf_amount)) {
-                    PRINTF("ERROR: uint256 overflow error.\n");
-                    msg->result = ETH_PLUGIN_RESULT_ERROR;
-                }
-            }
-            // else add if MULTIPLE_NFTS
-            else if (context->token1.type == MULTIPLE_NFTS && context->current_item_type == NFT) {
-                if (add_uint256(context->token1.amount, buf_amount)) {
-                    PRINTF("ERROR: uint256 overflow error.\n");
-                    msg->result = ETH_PLUGIN_RESULT_ERROR;
-                }
+            if (add_uint256(context->token1.amount, buf_amount)) {
+                PRINTF("ERROR: uint256 overflow error.\n");
+                msg->result = ETH_PLUGIN_RESULT_ERROR;
             }
 
             context->items_index = OFFER_END_AMOUNT;
@@ -218,8 +204,7 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
                 return;
             }
             // always set current_item_type
-            context->current_item_type =
-                get_item_type_from_sol(msg->parameter);
+            context->current_item_type = get_item_type_from_sol(msg->parameter);
             if (context->current_item_type == SOL_ERROR) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
@@ -234,22 +219,19 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
             PRINTF("CONSIDERATION_TOKEN\n");
             if ((context->token2.type == NATIVE || context->token2.type == ERC20) &&
                 context->token2.type != context->current_item_type) {
-                PRINTF("ERROR: Multiple Money in consideration's token type\n");
+                PRINTF("ERROR: Multiple currencies in consideration's token type\n");
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
             if (context->token2.type != NATIVE) {  // t2.type != NATIVE
                                                    // to set t2.address only on consi[0]
-                if (ADDRESS_IS_NULL_ADDRESS(context->token2.address))
-                {
-                    if (allzeroes(msg->parameter, PARAMETER_LENGTH))
-                    {
+                if (ADDRESS_IS_NULL_ADDRESS(context->token2.address)) {
+                    if (allzeroes(msg->parameter, PARAMETER_LENGTH)) {
                         msg->result = ETH_PLUGIN_RESULT_ERROR;
                         return;
                     }
                     copy_address(context->token2.address, msg->parameter, ADDRESS_LENGTH);
-                }
-                else {  // on consi[>0]
+                } else {  // on consi[>0]
                     // is same type and different address as consi[0]
                     if (context->current_item_type == context->token2.type &&
                         memcmp(context->token2.address,
@@ -257,7 +239,7 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
                                ADDRESS_LENGTH)) {
                         // Throw on Multiple erc20.
                         if (context->token2.type == ERC20) {
-                            PRINTF("ERROR: Multiple Money in consideration's token type\n");
+                            PRINTF("ERROR: Multiple currencies in consideration's token type\n");
                             msg->result = ETH_PLUGIN_RESULT_ERROR;
                             return;
                         }
@@ -280,14 +262,9 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
             PRINTF("BUF AMOUNT:\t%.*H\n", INT256_LENGTH, buf_amount);
 
             // add if t2.type is equal to current_item_type && t2.type is not multiple
-            if (context->token2.type == context->current_item_type) {
-                if (add_uint256(context->token2.amount, buf_amount)) {
-                    PRINTF("ERROR: uint256 overflow error.\n");
-                    msg->result = ETH_PLUGIN_RESULT_ERROR;
-                }
-            }
             // else add if MULTIPLE_NFTS
-            else if (context->token2.type == MULTIPLE_NFTS && context->current_item_type == NFT) {
+            if ((context->token2.type == context->current_item_type) ||
+                (context->token2.type == MULTIPLE_NFTS && context->current_item_type == NFT)) {
                 if (add_uint256(context->token2.amount, buf_amount)) {
                     PRINTF("ERROR: uint256 overflow error.\n");
                     msg->result = ETH_PLUGIN_RESULT_ERROR;
@@ -410,8 +387,7 @@ void parse_orders(ethPluginProvideParameter_t *msg, context_t *context) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            if (context->current_length == 0)
-            {
+            if (context->current_length == 0) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
@@ -458,8 +434,7 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
-            if (context->numerator == 0 || context->denominator == 0)
-            {
+            if (context->numerator == 0 || context->denominator == 0) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
