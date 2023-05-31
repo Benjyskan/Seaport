@@ -19,11 +19,8 @@
 #include <stdint.h>
 #include <string.h>
 
-// #include "cx.h"
-// #include "os.h"
-
 #include "opensea_plugin.h"
-//
+
 // Function to dispatch calls from the ethereum app.
 void dispatch_plugin_calls(int message, void *parameters) {
     switch (message) {

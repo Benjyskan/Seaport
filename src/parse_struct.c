@@ -224,7 +224,7 @@ void parse_considerations(ethPluginProvideParameter_t *msg, context_t *context) 
                 return;
             }
             if (context->token2.type != NATIVE) {  // t2.type != NATIVE
-                                                   // to set t2.address only on consi[0]
+                // to set t2.address only on consi[0]
                 if (ADDRESS_IS_NULL_ADDRESS(context->token2.address)) {
                     if (allzeroes(msg->parameter, PARAMETER_LENGTH)) {
                         msg->result = ETH_PLUGIN_RESULT_ERROR;
@@ -382,7 +382,7 @@ void parse_orders(ethPluginProvideParameter_t *msg, context_t *context) {
             }
             break;
         case ORDER_SIGNATURE:
-            PRINTF("ORDER_SIGNATURE\n");  // If len = 0 what happens ?
+            PRINTF("ORDER_SIGNATURE\n");
             if (!copy_number(msg->parameter, &context->current_length)) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
