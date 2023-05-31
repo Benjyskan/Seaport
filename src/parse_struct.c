@@ -1,4 +1,5 @@
 
+#include <stdint.h>
 #include "eth_plugin_interface.h"
 #include "opensea_plugin.h"
 /*
@@ -410,11 +411,12 @@ void parse_advanced_orders(ethPluginProvideParameter_t *msg, context_t *context)
         case ADVANCED_PARAMETER_OFFSET:
             PRINTF("ADVANCED_PARAMETER_OFFSET\n");
 
-            if (!allzeroes(msg->parameter, PARAMETER_LENGTH - 1) ||
-                msg->parameter[PARAMETER_LENGTH - 1] != 160) {
+            uint8_t expected_offset = 0;
+            if (!copy_number(msg->parameter, &expected_offset) || expected_offset != 160) {
                 msg->result = ETH_PLUGIN_RESULT_ERROR;
                 return;
             }
+
             context->orders_index = ADVANCED_NUMERATOR;
             break;
         case ADVANCED_NUMERATOR:
